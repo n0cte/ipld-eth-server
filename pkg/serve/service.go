@@ -32,7 +32,6 @@ import (
 	"github.com/vulcanize/ipld-eth-indexer/pkg/postgres"
 
 	"github.com/vulcanize/ipld-eth-server/pkg/eth"
-	"github.com/vulcanize/ipld-eth-server/pkg/shared"
 )
 
 const (
@@ -51,8 +50,6 @@ type Server interface {
 	Subscribe(id rpc.ID, sub chan<- SubscriptionPayload, quitChan chan<- bool, params eth.SubscriptionSettings)
 	// Method to unsubscribe from the service
 	Unsubscribe(id rpc.ID)
-	// Method to access chain type
-	Chain() shared.ChainType
 }
 
 // Service is the underlying struct for the watcher
@@ -347,11 +344,6 @@ func (sap *Service) Stop() error {
 	sap.close()
 	sap.Unlock()
 	return nil
-}
-
-// Chain returns the chain type for this service
-func (sap *Service) Chain() shared.ChainType {
-	return shared.Ethereum
 }
 
 // close is used to close all listening subscriptions
