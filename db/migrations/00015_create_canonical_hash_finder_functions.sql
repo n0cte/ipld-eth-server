@@ -45,4 +45,4 @@ LANGUAGE 'plpgsql';
 
 -- +goose Down
 DROP FUNCTION header_weight;
-DROP FUNCTION canoncial_header;
+DROP FUNCTION canonical_header;

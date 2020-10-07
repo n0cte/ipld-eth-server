@@ -24,38 +24,10 @@ CREATE SCHEMA eth;
 
 
 --
--- Name: graphql_subscription(); Type: FUNCTION; Schema: eth; Owner: -
+-- Name: canonical_header(bigint); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION eth.graphql_subscription() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $_$
-declare
-    table_name text = TG_ARGV[0];
-    attribute text = TG_ARGV[1];
-    id text;
-begin
-    execute 'select $1.' || quote_ident(attribute)
-        using new
-        into id;
-    perform pg_notify('postgraphile:' || table_name,
-                      json_build_object(
-                              '__node__', json_build_array(
-                              table_name,
-                              id
-                          )
-                          )::text
-        );
-    return new;
-end;
-$_$;
-
-
---
--- Name: canoncial_header(bigint); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.canoncial_header(height bigint) RETURNS integer
+CREATE FUNCTION public.canonical_header(height bigint) RETURNS integer
     LANGUAGE plpgsql
     AS $$
 DECLARE
@@ -688,7 +660,7 @@ ALTER TABLE ONLY public.nodes
 -- Name: account_state_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX account_state_id_index ON eth.state_accounts USING brin (state_id) WITH (pages_per_range='32');
+CREATE INDEX account_state_id_index ON eth.state_accounts USING btree (state_id);
 
 
 --
@@ -702,7 +674,7 @@ CREATE INDEX block_hash_index ON eth.header_cids USING btree (block_hash);
 -- Name: block_number_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX block_number_index ON eth.header_cids USING brin (block_number) WITH (pages_per_range='32');
+CREATE INDEX block_number_index ON eth.header_cids USING brin (block_number);
 
 
 --
@@ -786,7 +758,7 @@ CREATE INDEX rct_topic3_index ON eth.receipt_cids USING gin (topic3s);
 -- Name: rct_tx_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX rct_tx_id_index ON eth.receipt_cids USING brin (tx_id) WITH (pages_per_range='32');
+CREATE INDEX rct_tx_id_index ON eth.receipt_cids USING btree (tx_id);
 
 
 --
@@ -800,7 +772,7 @@ CREATE INDEX state_cid_index ON eth.state_cids USING btree (cid);
 -- Name: state_header_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX state_header_id_index ON eth.state_cids USING brin (header_id) WITH (pages_per_range='32');
+CREATE INDEX state_header_id_index ON eth.state_cids USING btree (header_id);
 
 
 --
@@ -870,14 +842,14 @@ CREATE INDEX storage_root_index ON eth.state_accounts USING btree (storage_root)
 -- Name: storage_state_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX storage_state_id_index ON eth.storage_cids USING brin (state_id) WITH (pages_per_range='32');
+CREATE INDEX storage_state_id_index ON eth.storage_cids USING btree (state_id);
 
 
 --
 -- Name: timestamp_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX timestamp_index ON eth.header_cids USING brin ("timestamp") WITH (pages_per_range='32');
+CREATE INDEX timestamp_index ON eth.header_cids USING brin ("timestamp");
 
 
 --
@@ -912,7 +884,7 @@ CREATE INDEX tx_hash_index ON eth.transaction_cids USING btree (tx_hash);
 -- Name: tx_header_id_index; Type: INDEX; Schema: eth; Owner: -
 --
 
-CREATE INDEX tx_header_id_index ON eth.transaction_cids USING brin (header_id) WITH (pages_per_range='32');
+CREATE INDEX tx_header_id_index ON eth.transaction_cids USING btree (header_id);
 
 
 --
@@ -927,55 +899,6 @@ CREATE INDEX tx_mh_index ON eth.transaction_cids USING btree (mh_key);
 --
 
 CREATE INDEX tx_src_index ON eth.transaction_cids USING btree (src);
-
-
---
--- Name: header_cids header_cids_ai; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER header_cids_ai AFTER INSERT ON eth.header_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('header_cids', 'id');
-
-
---
--- Name: receipt_cids receipt_cids_ai; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER receipt_cids_ai AFTER INSERT ON eth.receipt_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('receipt_cids', 'id');
-
-
---
--- Name: state_accounts state_accounts_ai; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER state_accounts_ai AFTER INSERT ON eth.state_accounts FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('state_accounts', 'id');
-
-
---
--- Name: state_cids state_cids_ai; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER state_cids_ai AFTER INSERT ON eth.state_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('state_cids', 'id');
-
-
---
--- Name: storage_cids storage_cids_ai; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER storage_cids_ai AFTER INSERT ON eth.storage_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('storage_cids', 'id');
-
-
---
--- Name: transaction_cids transaction_cids_ai; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER transaction_cids_ai AFTER INSERT ON eth.transaction_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('transaction_cids', 'id');
-
-
---
--- Name: uncle_cids uncle_cids_ai; Type: TRIGGER; Schema: eth; Owner: -
---
-
-CREATE TRIGGER uncle_cids_ai AFTER INSERT ON eth.uncle_cids FOR EACH ROW EXECUTE FUNCTION eth.graphql_subscription('uncle_cids', 'id');
 
 
 --
