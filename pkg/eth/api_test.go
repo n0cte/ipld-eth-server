@@ -25,7 +25,6 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rpc"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -120,7 +119,7 @@ var _ = Describe("API", func() {
 			bn := api.BlockNumber()
 			ubn := (uint64)(bn)
 			subn := strconv.FormatUint(ubn, 10)
-			Expect(subn).To(Equal(mocks.MockCIDPayload.HeaderCID.BlockNumber))
+			Expect(subn).To(Equal(mocks.BlockNumber.String()))
 		})
 	})
 
@@ -136,7 +135,7 @@ var _ = Describe("API", func() {
 	Describe("GetBlockByNumber", func() {
 		It("Retrieves a block by number", func() {
 			// without full txs
-			number, err := strconv.ParseInt(mocks.MockCIDPayload.HeaderCID.BlockNumber, 10, 64)
+			number, err := strconv.ParseInt(mocks.BlockNumber.String(), 10, 64)
 			Expect(err).ToNot(HaveOccurred())
 			block, err := api.GetBlockByNumber(context.Background(), rpc.BlockNumber(number), false)
 			Expect(err).ToNot(HaveOccurred())
@@ -164,7 +163,7 @@ var _ = Describe("API", func() {
 
 	Describe("GetHeaderByNumber", func() {
 		It("Retrieves a header by number", func() {
-			number, err := strconv.ParseInt(mocks.MockCIDPayload.HeaderCID.BlockNumber, 10, 64)
+			number, err := strconv.ParseInt(mocks.BlockNumber.String(), 10, 64)
 			Expect(err).ToNot(HaveOccurred())
 			header, err := api.GetHeaderByNumber(context.Background(), rpc.BlockNumber(number))
 			Expect(err).ToNot(HaveOccurred())
@@ -172,7 +171,7 @@ var _ = Describe("API", func() {
 		})
 
 		It("Throws an error if a header cannot be found", func() {
-			number, err := strconv.ParseInt(mocks.MockCIDPayload.HeaderCID.BlockNumber, 10, 64)
+			number, err := strconv.ParseInt(mocks.BlockNumber.String(), 10, 64)
 			Expect(err).ToNot(HaveOccurred())
 			header, err := api.GetHeaderByNumber(context.Background(), rpc.BlockNumber(number+1))
 			Expect(err).To(HaveOccurred())

@@ -20,7 +20,7 @@ $$ LANGUAGE SQL;
 
 -- +goose StatementBegin
 -- returns the id for the header at the provided height which is heaviest
-CREATE OR REPLACE FUNCTION canoncial_header(height BIGINT) RETURNS INT AS
+CREATE OR REPLACE FUNCTION canonical_header(height BIGINT) RETURNS INT AS
 $BODY$
 DECLARE
   current_weight INT;
