@@ -19,13 +19,13 @@ package eth
 import (
 	"context"
 	"errors"
-	"github.com/ethereum/go-ethereum/consensus"
-	"github.com/ethereum/go-ethereum/consensus/ethash"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/common/math"
+	"github.com/ethereum/go-ethereum/consensus"
+	"github.com/ethereum/go-ethereum/consensus/ethash"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -75,6 +75,7 @@ type Config struct {
 	ChainConfig   *params.ChainConfig
 	VmConfig      vm.Config
 	DefaultSender *common.Address
+	RPCGasCap     *big.Int
 }
 
 func NewEthBackend(db *postgres.DB, c *Config) (*Backend, error) {

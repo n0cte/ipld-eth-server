@@ -91,6 +91,7 @@ func NewServer(settings *Config) (Server, error) {
 		ChainConfig:   settings.ChainConfig,
 		VmConfig:      vm.Config{},
 		DefaultSender: settings.DefaultSender,
+		RPCGasCap:     settings.RPCGasCap,
 	}
 	return sn, nil
 }

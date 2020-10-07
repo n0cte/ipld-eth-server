@@ -206,6 +206,21 @@ func (pea *PublicEthAPI) GetTransactionByHash(ctx context.Context, hash common.H
 	return nil, nil
 }
 
+// Call executes the given transaction on the state for the given block number.
+//
+// Additionally, the caller can specify a batch of contract for fields overriding.
+//
+// Note, this function doesn't make and changes in the state/blockchain and is
+// useful to execute and retrieve values.
+func (pea *PublicEthAPI) Call(ctx context.Context, args CallArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides *map[common.Address]account) (hexutil.Bytes, error) {
+	var accounts map[common.Address]account
+	if overrides != nil {
+		accounts = *overrides
+	}
+	result, _, _, err := DoCall(ctx, pea.B, args, blockNrOrHash, accounts, 5*time.Second, pea.B.Config.RPCGasCap)
+	return (hexutil.Bytes)(result), err
+}
+
 // CallArgs represents the arguments for a call.
 type CallArgs struct {
 	From     *common.Address `json:"from"`
@@ -230,7 +245,7 @@ type account struct {
 	StateDiff *map[common.Hash]common.Hash `json:"stateDiff"`
 }
 
-func DoCall(ctx context.Context, b Backend, args CallArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides map[common.Address]account, timeout time.Duration, globalGasCap *big.Int) ([]byte, uint64, bool, error) {
+func DoCall(ctx context.Context, b *Backend, args CallArgs, blockNrOrHash rpc.BlockNumberOrHash, overrides map[common.Address]account, timeout time.Duration, globalGasCap *big.Int) ([]byte, uint64, bool, error) {
 	defer func(start time.Time) {
 		logrus.Debugf("Executing EVM call finished %s runtime %s", time.Now().String(), time.Since(start).String())
 	}(time.Now())

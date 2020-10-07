@@ -16,3 +16,4 @@
 [ethereum]
     chainID = "1" # $ETH_CHAIN_ID
     defaultSender = "" # $ETH_DEFAULT_SENDER_ADDR
+    rpcGasCap = "1000000000000" # $ETH_RPC_GAS_CAP

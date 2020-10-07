@@ -18,6 +18,7 @@ package serve
 
 import (
 	"github.com/ethereum/go-ethereum/common"
+	"math/big"
 	"os"
 	"path/filepath"
 
@@ -43,6 +44,8 @@ const (
 	ETH_CHAIN_ID = "ETH_CHAIN_ID"
 
 	ETH_DEFAULT_SENDER_ADDR = "ETH_DEFAULT_SENDER_ADDR"
+
+	ETH_RPC_GAS_CAP = "ETH_RPC_GAS_CAP"
 )
 
 // Config struct
@@ -54,6 +57,7 @@ type Config struct {
 	IPCEndpoint   string
 	ChainConfig   *params.ChainConfig
 	DefaultSender *common.Address
+	RPCGasCap     *big.Int
 }
 
 // NewConfig is used to initialize a watcher config from a .toml file
@@ -66,6 +70,7 @@ func NewConfig() (*Config, error) {
 	viper.BindEnv("server.httpPath", SERVER_HTTP_PATH)
 	viper.BindEnv("ethereum.chainID", ETH_CHAIN_ID)
 	viper.BindEnv("ethereum.defaultSender", ETH_DEFAULT_SENDER_ADDR)
+	viper.BindEnv("ethereum.rpcGasCap", ETH_RPC_GAS_CAP)
 
 	c.DBConfig.Init()
 
@@ -97,7 +102,12 @@ func NewConfig() (*Config, error) {
 		sender := common.HexToAddress(defaultSenderStr)
 		c.DefaultSender = &sender
 	}
-
+	rpcGasCapStr := viper.GetString("ethereum.rpcGasCap")
+	if rpcGasCapStr != "" {
+		if rpcGasCap, ok := new(big.Int).SetString(rpcGasCapStr, 10); ok {
+			c.RPCGasCap = rpcGasCap
+		}
+	}
 	chainID := viper.GetUint64("ethereum.chainID")
 	var err error
 	c.ChainConfig, err = eth.ChainConfig(chainID)
