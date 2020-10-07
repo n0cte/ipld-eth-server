@@ -116,7 +116,7 @@ func (b *Backend) HeaderByNumber(ctx context.Context, blockNumber rpc.BlockNumbe
 	}
 	_, canonicalHeaderRLP, err := b.GetCanonicalHeader(uint64(number))
 	if err != nil {
-
+		return nil, err
 	}
 
 	header := new(types.Header)
@@ -614,16 +614,21 @@ func (b *Backend) StateAndHeaderByNumber(ctx context.Context, number rpc.BlockNu
 // GetCanonicalHash gets the canonical hash for the provided number, if there is one
 func (b *Backend) GetCanonicalHash(number uint64) common.Hash {
 	var hashResult string
-	if err := b.DB.Select(&hashResult, RetrieveCanonicalBlockHashByNumber, number); err != nil {
+	if err := b.DB.Get(&hashResult, RetrieveCanonicalBlockHashByNumber, number); err != nil {
 		return common.Hash{}
 	}
 	return common.HexToHash(hashResult)
 }
 
+type rowResult struct {
+	CID  string
+	Data []byte
+}
+
 // GetCanonicalHeader gets the canonical header for the provided number, if there is one
 func (b *Backend) GetCanonicalHeader(number uint64) (string, []byte, error) {
-	headerResult := new(ipldResult)
-	return headerResult.cid, headerResult.data, b.DB.Get(headerResult, RetrieveCanonicalHeaderByNumber, number)
+	headerResult := new(rowResult)
+	return headerResult.CID, headerResult.Data, b.DB.QueryRowx(RetrieveCanonicalHeaderByNumber, number).StructScan(headerResult)
 }
 
 // GetEVM constructs and returns a vm.EVM

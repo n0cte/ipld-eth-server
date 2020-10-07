@@ -175,7 +175,7 @@ var _ = Describe("API", func() {
 			Expect(err).ToNot(HaveOccurred())
 			header, err := api.GetHeaderByNumber(context.Background(), rpc.BlockNumber(number+1))
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("header at block %d is not available", number+1))
+			Expect(err.Error()).To(ContainSubstring("sql: no rows in result set"))
 			Expect(header).To(BeNil())
 			_, err = api.B.DB.Beginx()
 			Expect(err).ToNot(HaveOccurred())
@@ -210,7 +210,7 @@ var _ = Describe("API", func() {
 	})
 
 	Describe("GetLogs", func() {
-		It("Retrieves receipt logs that match the provided topcis within the provided range", func() {
+		It("Retrieves receipt logs that match the provided topics within the provided range", func() {
 			crit := ethereum.FilterQuery{
 				Topics: [][]common.Hash{
 					{
