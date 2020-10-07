@@ -17,10 +17,11 @@
 package serve
 
 import (
-	"github.com/ethereum/go-ethereum/common"
 	"math/big"
 	"os"
 	"path/filepath"
+
+	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/spf13/viper"
