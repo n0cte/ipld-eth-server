@@ -18,6 +18,7 @@ package serve
 
 import (
 	"fmt"
+	"github.com/ethereum/go-ethereum/core/vm"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -72,6 +73,8 @@ type Service struct {
 	db *postgres.DB
 	// wg for syncing serve processes
 	serveWg *sync.WaitGroup
+	// config for backend
+	config *eth.Config
 }
 
 // NewServer creates a new Server using an underlying Service struct
@@ -84,6 +87,11 @@ func NewServer(settings *Config) (Server, error) {
 	sn.QuitChan = make(chan bool)
 	sn.Subscriptions = make(map[common.Hash]map[rpc.ID]Subscription)
 	sn.SubscriptionTypes = make(map[common.Hash]eth.SubscriptionSettings)
+	sn.config = &eth.Config{
+		ChainConfig:   settings.ChainConfig,
+		VmConfig:      vm.Config{},
+		DefaultSender: settings.DefaultSender,
+	}
 	return sn, nil
 }
 
@@ -121,7 +129,7 @@ func (sap *Service) APIs() []rpc.API {
 			Public:    true,
 		},
 	}
-	backend, err := eth.NewEthBackend(sap.db)
+	backend, err := eth.NewEthBackend(sap.db, sap.config)
 	if err != nil {
 		log.Error(err)
 		return nil

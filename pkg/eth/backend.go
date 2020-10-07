@@ -19,6 +19,8 @@ package eth
 import (
 	"context"
 	"errors"
+	"github.com/ethereum/go-ethereum/consensus"
+	"github.com/ethereum/go-ethereum/consensus/ethash"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -66,25 +68,14 @@ type Backend struct {
 	EthDB         ethdb.Database
 	StateDatabase state.Database
 
-	config *Config
+	Config *Config
 }
 
 type Config struct {
-	chainContext core.ChainContext // TODO: this
-	chainConfig  *params.ChainConfig
-	vmConfig     vm.Config
-	defaultAddr  *common.Address
+	ChainConfig   *params.ChainConfig
+	VmConfig      vm.Config
+	DefaultSender *common.Address
 }
-
-/*
-type ChainContext interface {
-	// Engine retrieves the chain's consensus engine.
-	Engine() consensus.Engine
-
-	// GetHeader returns the hash corresponding to their hash.
-	GetHeader(common.Hash, uint64) *types.Header
-}
-*/
 
 func NewEthBackend(db *postgres.DB, c *Config) (*Backend, error) {
 	r := NewCIDRetriever(db)
@@ -96,7 +87,7 @@ func NewEthBackend(db *postgres.DB, c *Config) (*Backend, error) {
 		IPLDRetriever: NewIPLDRetriever(db),
 		EthDB:         ethDB,
 		StateDatabase: state.NewDatabase(ethDB),
-		config:        c,
+		Config:        c,
 	}, nil
 }
 
@@ -202,6 +193,7 @@ func (b *Backend) BlockByNumber(ctx context.Context, blockNumber rpc.BlockNumber
 		return nil, err
 	}
 	// Retrieve all the CIDs for the block
+	// TODO: optimize this by retrieving iplds directly rather than the cids first (this is remanent from when we fetched iplds through ipfs blockservice interface)
 	headerCID, uncleCIDs, txCIDs, rctCIDs, err := b.Retriever.RetrieveBlockByHash(canonicalHash)
 	if err != nil {
 		return nil, err
@@ -636,6 +628,21 @@ func (b *Backend) GetCanonicalHeader(number uint64) (string, []byte, error) {
 // GetEVM constructs and returns a vm.EVM
 func (b *Backend) GetEVM(ctx context.Context, msg core.Message, state *state.StateDB, header *types.Header) (*vm.EVM, error) {
 	state.SetBalance(msg.From(), math.MaxBig256)
-	c := core.NewEVMContext(msg, header, b.config.chainContext, nil)
-	return vm.NewEVM(c, state, b.config.chainConfig, b.config.vmConfig), nil
+	c := core.NewEVMContext(msg, header, b, nil)
+	return vm.NewEVM(c, state, b.Config.ChainConfig, b.Config.VmConfig), nil
+}
+
+// Engine satisfied the ChainContext interface
+func (b *Backend) Engine() consensus.Engine {
+	// TODO: we need to support more than just ethash based engines
+	return ethash.NewFaker()
+}
+
+// GetHeader satisfied the ChainContext interface
+func (b *Backend) GetHeader(hash common.Hash, height uint64) *types.Header {
+	header, err := b.HeaderByHash(context.Background(), hash)
+	if err != nil {
+		return nil
+	}
+	return header
 }

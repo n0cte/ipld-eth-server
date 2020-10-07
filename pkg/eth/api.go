@@ -241,10 +241,10 @@ func DoCall(ctx context.Context, b Backend, args CallArgs, blockNrOrHash rpc.Blo
 	// Set sender address or use a default if none specified
 	var addr common.Address
 	if args.From == nil {
-		if b.config.defaultAddr == nil {
+		if b.Config.DefaultSender == nil {
 			return nil, 0, false, txRequiresSenderErr
 		}
-		addr = *b.config.defaultAddr
+		addr = *b.Config.DefaultSender
 	} else {
 		addr = *args.From
 	}
