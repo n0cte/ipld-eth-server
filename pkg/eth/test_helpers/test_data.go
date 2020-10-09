@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package mocks
+package test_helpers
 
 import (
 	"crypto/ecdsa"
@@ -59,7 +59,6 @@ var (
 	MockTransactions, MockReceipts, SenderAddr = createTransactionsAndReceipts()
 	ReceiptsRlp, _                             = rlp.EncodeToBytes(MockReceipts)
 	MockBlock                                  = types.NewBlock(&MockHeader, MockTransactions, nil, MockReceipts)
-	MockBlockRlp, _                            = rlp.EncodeToBytes(MockBlock)
 	MockHeaderRlp, _                           = rlp.EncodeToBytes(MockBlock.Header())
 	Address                                    = common.HexToAddress("0xaE9BEa628c4Ce503DcFD7E305CaB4e29E7476592")
 	AnotherAddress                             = common.HexToAddress("0xaE9BEa628c4Ce503DcFD7E305CaB4e29E7476593")
@@ -288,36 +287,6 @@ var (
 		Account,
 	})
 
-	StateDiffs = []statediff.StateNode{
-		{
-			Path:      []byte{'\x06'},
-			NodeType:  statediff.Leaf,
-			LeafKey:   ContractLeafKey,
-			NodeValue: ContractLeafNode,
-			StorageNodes: []statediff.StorageNode{
-				{
-					Path:      []byte{},
-					NodeType:  statediff.Leaf,
-					LeafKey:   StorageLeafKey,
-					NodeValue: StorageLeafNode,
-				},
-			},
-		},
-		{
-			Path:         []byte{'\x0c'},
-			NodeType:     statediff.Leaf,
-			LeafKey:      AccountLeafKey,
-			NodeValue:    AccountLeafNode,
-			StorageNodes: []statediff.StorageNode{},
-		},
-	}
-
-	MockStateDiff = statediff.StateObject{
-		BlockNumber: new(big.Int).Set(BlockNumber),
-		BlockHash:   MockBlock.Hash(),
-		Nodes:       StateDiffs,
-	}
-	MockStateDiffBytes, _ = rlp.EncodeToBytes(MockStateDiff)
 	MockStateNodes        = []eth.TrieNode{
 		{
 			LeafKey: common.BytesToHash(ContractLeafKey),
@@ -367,57 +336,6 @@ var (
 		ReceiptMetaData: MockRctMeta,
 		StorageNodes:    MockStorageNodes,
 		StateNodes:      MockStateNodes,
-	}
-
-	MockCIDPayload = eth.CIDPayload{
-		HeaderCID: eth.HeaderModel{
-			BlockHash:       MockBlock.Hash().String(),
-			BlockNumber:     MockBlock.Number().String(),
-			CID:             HeaderCID.String(),
-			MhKey:           HeaderMhKey,
-			ParentHash:      MockBlock.ParentHash().String(),
-			TotalDifficulty: MockBlock.Difficulty().String(),
-			Reward:          "5000000000000000000",
-			StateRoot:       MockBlock.Root().String(),
-			RctRoot:         MockBlock.ReceiptHash().String(),
-			TxRoot:          MockBlock.TxHash().String(),
-			UncleRoot:       MockBlock.UncleHash().String(),
-			Bloom:           MockBlock.Bloom().Bytes(),
-			Timestamp:       MockBlock.Time(),
-		},
-		UncleCIDs:       []eth.UncleModel{},
-		TransactionCIDs: MockTrxMetaPostPublsh,
-		ReceiptCIDs: map[common.Hash]eth.ReceiptModel{
-			MockTransactions[0].Hash(): MockRctMetaPostPublish[0],
-			MockTransactions[1].Hash(): MockRctMetaPostPublish[1],
-			MockTransactions[2].Hash(): MockRctMetaPostPublish[2],
-		},
-		StateNodeCIDs: MockStateMetaPostPublish,
-		StorageNodeCIDs: map[string][]eth.StorageNodeModel{
-			contractPath: {
-				{
-					CID:        StorageCID.String(),
-					MhKey:      StorageMhKey,
-					Path:       []byte{},
-					StorageKey: common.BytesToHash(StorageLeafKey).Hex(),
-					NodeType:   2,
-				},
-			},
-		},
-		StateAccounts: map[string]eth.StateAccountModel{
-			contractPath: {
-				Balance:     big.NewInt(0).String(),
-				Nonce:       nonce1,
-				CodeHash:    ContractCodeHash.Bytes(),
-				StorageRoot: common.HexToHash(ContractRoot).String(),
-			},
-			accountPath: {
-				Balance:     big.NewInt(1000).String(),
-				Nonce:       nonce0,
-				CodeHash:    AccountCodeHash.Bytes(),
-				StorageRoot: common.HexToHash(AccountRoot).String(),
-			},
-		},
 	}
 
 	MockCIDWrapper = &eth2.CIDWrapper{

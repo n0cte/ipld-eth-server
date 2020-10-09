@@ -32,6 +32,7 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/sirupsen/logrus"
+
 	"github.com/vulcanize/ipld-eth-indexer/pkg/eth"
 	"github.com/vulcanize/ipld-eth-server/pkg/shared"
 )
@@ -41,10 +42,6 @@ const APIName = "eth"
 
 // APIVersion is the version of the watcher's eth api
 const APIVersion = "0.0.1"
-
-var (
-	txRequiresSenderErr = errors.New("default sender address not set; tx requires sender address")
-)
 
 type PublicEthAPI struct {
 	B *Backend
@@ -217,7 +214,10 @@ func (pea *PublicEthAPI) Call(ctx context.Context, args CallArgs, blockNrOrHash 
 	if overrides != nil {
 		accounts = *overrides
 	}
-	result, _, _, err := DoCall(ctx, pea.B, args, blockNrOrHash, accounts, 5*time.Second, pea.B.Config.RPCGasCap)
+	result, _, failed, err := DoCall(ctx, pea.B, args, blockNrOrHash, accounts, 5*time.Second, pea.B.Config.RPCGasCap)
+	if failed && err == nil {
+		return nil, errors.New("eth_call failed without error")
+	}
 	return (hexutil.Bytes)(result), err
 }
 
@@ -256,10 +256,9 @@ func DoCall(ctx context.Context, b *Backend, args CallArgs, blockNrOrHash rpc.Bl
 	// Set sender address or use a default if none specified
 	var addr common.Address
 	if args.From == nil {
-		if b.Config.DefaultSender == nil {
-			return nil, 0, false, txRequiresSenderErr
+		if b.Config.DefaultSender != nil {
+			addr = *b.Config.DefaultSender
 		}
-		addr = *b.Config.DefaultSender
 	} else {
 		addr = *args.From
 	}

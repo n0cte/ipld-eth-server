@@ -59,7 +59,7 @@ type Backend struct {
 	// underlying postgres db
 	DB *postgres.DB
 
-	// postgres db types
+	// postgres db interfaces
 	Retriever     *CIDRetriever
 	Fetcher       *IPLDFetcher
 	IPLDRetriever *IPLDRetriever
